@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns="http://www.springframework.org/schema/security"
+             xmlns:tx="http://www.springframework.org/schema/tx"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+	    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+    <tx:annotation-driven/>
+    <context:component-scan base-package="com.concrete.prj.login.bl.service"/>
+    <context:component-scan base-package="com.concrete.prj.login.security"/>
+    <context:component-scan base-package="com.concrete.prj.login.core.utils.auth"/>
+
+    <http use-expressions="true"
+          entry-point-ref="authenticationEntryPoint"
+          authentication-manager-ref="authenticationManager">
+        <custom-filter ref="authorizationJwtFilter" before="LOGIN_PAGE_FILTER"/>
+        <!--custom-filter before="ANONYMOUS_FILTER" ref="myFilter"/-->
+        <intercept-url pattern="/signup**" access="permitAll"/>
+        <intercept-url pattern="/users/**" access="hasRole('ROLE_USER')"/>
+        <intercept-url pattern="/login**" access="permitAll"/>
+        <!--intercept-url pattern="/**" access="permitAll"/-->
+        <csrf disabled="true"/>
+    </http>
+
+    <beans:bean id="myUserDetailsService" class="com.concrete.prj.login.bl.service.CScUserFacade"/>
+    <beans:bean id="authenticationEntryPoint" class="com.concrete.prj.login.security.CScAppAuthenticationEntryPoint"/>
+    <beans:bean id="authorizationJwtFilter" class="com.concrete.prj.login.security.CScJwtAuthorizationFiltering"/>
+
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider user-service-ref="myUserDetailsService">
+            <password-encoder ref="encoder"/>
+        </authentication-provider>
+    </authentication-manager>
+
+    <beans:bean id="encoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <!--beans:bean id="authenticationTokenFilter" class="com.concrete.prj.login.security.JWTAuthenticationFilter">
+    <beans:property name="authenticationManager">
+        <beans:ref bean="authenticationManager"/>
+    </beans:property>
+    </beans:bean-->
+
+
+</beans:beans>
